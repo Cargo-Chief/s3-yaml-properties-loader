@@ -1,6 +1,7 @@
 package com.cargochief.spring.properties.configuration;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -8,6 +9,7 @@ import com.spring.loader.cloud.S3Service;
 import com.spring.loader.cloud.S3StreamLoader;
 
 @Configuration
+@ComponentScan("com.cargochief.spring.properties")
 public class S3YamlPropertiesLoaderConfiguration {
 
     @Bean
