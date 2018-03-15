@@ -19,6 +19,3 @@ application.yml
 /RUNNING_PID
 .DS_STORE
 
-client_secret.json
-capacity_file.txt
-
