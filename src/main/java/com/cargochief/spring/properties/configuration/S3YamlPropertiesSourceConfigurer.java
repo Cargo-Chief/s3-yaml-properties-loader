@@ -3,6 +3,7 @@ package com.cargochief.spring.properties.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,10 +90,11 @@ public class S3YamlPropertiesSourceConfigurer
             if (!StringUtils.isEmpty(location)) {
                 InputStream in = s3ResourceLoader.getProperty(location);
                 InputStreamResource resource = new InputStreamResource(in);
-                PropertySource<?> propertySource =
-                        sourceLoader.load(location, resource, null);
+                List<PropertySource<?>> propertySource = sourceLoader.load(location, resource);
                 if (propertySource != null) {
-                    propertySources.addFirst(propertySource);
+                    for (PropertySource propSource : propertySource) {
+                        propertySources.addFirst(propSource);
+                    }
 
                     String msg = String.format(
                             "Loaded yaml properties from: %s",
