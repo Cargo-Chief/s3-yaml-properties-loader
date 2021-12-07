@@ -9,7 +9,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.6.1")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.11.RELEASE")
     }
 }
 
@@ -33,22 +33,18 @@ repositories {
     jcenter()
 }
 
-dependencies {
-    compile("org.springframework.boot:spring-boot-starter:2.6.1")
-    compile "com.spring.loader:s3-loader:2.2.2"
-}
-
-bootJar {
+bootRepackage {
     enabled = false
 }
 
-jar {
-    enabled = true
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter")
+    compile "com.spring.loader:s3-loader:2.2.2"
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
+    classifier = 'sources'
 }
 
 artifacts {
