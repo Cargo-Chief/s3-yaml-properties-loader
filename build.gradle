@@ -13,6 +13,30 @@ buildscript {
     }
 }
 
+plugins {
+    id 'java'
+    id 'maven'
+    id 'maven-publish'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "s3://cargochief-maven2/snapshots"
+            authentication {
+                awsIm(AwsImAuthentication)// load from EC2 role or env var
+            }
+        }
+    }
+}
+
+version = '4.0.0'
+
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'java-library'
@@ -30,12 +54,11 @@ eclipse {
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter:2.6.1")
-    compile "com.spring.loader:s3-loader:2.2.2"
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.11.896'
 }
 
 bootJar {
