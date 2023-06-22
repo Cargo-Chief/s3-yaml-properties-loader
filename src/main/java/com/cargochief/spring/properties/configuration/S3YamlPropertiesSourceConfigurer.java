@@ -90,12 +90,11 @@ public class S3YamlPropertiesSourceConfigurer
             String location) {
         try {
             if (!StringUtils.isEmpty(location)) {
-                System.out.println("LOCATION: " + location);
                 GetObjectRequest getObjectRequest = parseGetObjectRequestFromS3Location(location);
                 S3Object responseObject = amazonS3.getObject(getObjectRequest);
-                InputStream config = responseObject.getObjectContent();
 
-                InputStreamResource resource = new InputStreamResource(config);
+                InputStream in = responseObject.getObjectContent();
+                InputStreamResource resource = new InputStreamResource(in);
                 List<PropertySource<?>> propertySource = sourceLoader.load(location, resource);
                 if (propertySource != null) {
                     for (PropertySource propSource : propertySource) {
