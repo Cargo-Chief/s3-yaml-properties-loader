@@ -7,7 +7,6 @@
 buildscript {
     repositories {
         mavenCentral()
-        mavenLocal()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:2.6.1")
@@ -16,36 +15,21 @@ buildscript {
 
 plugins {
     id 'java'
+    id 'maven'
+    id 'maven-publish'
 }
 
-allprojects {
-    apply plugin: "maven"
-    apply plugin: "maven-publish"
-
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
     repositories {
         maven {
-            name "CargoChief Maven Snapshots Repo"
             url "s3://cargochief-maven2/snapshots"
             authentication {
-                awsIm(AwsImAuthentication) // load from EC2 role or env var
-            }
-        }
-        mavenLocal()
-        mavenCentral()
-    }
-
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                from components.java
-            }
-        }
-        repositories {
-            maven {
-                url "s3://cargochief-maven2/snapshots"
-                authentication {
-                    awsIm(AwsImAuthentication)// load from EC2 role or env var
-                }
+                awsIm(AwsImAuthentication)// load from EC2 role or env var
             }
         }
     }
@@ -70,7 +54,6 @@ eclipse {
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
