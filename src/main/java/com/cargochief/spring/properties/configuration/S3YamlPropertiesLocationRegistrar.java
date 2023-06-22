@@ -11,10 +11,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.SystemPropertyUtils;
 
-import com.spring.loader.util.SystemPropertyResolver;
-import com.spring.loader.util.WordUtils;
 
 import com.cargochief.spring.properties.S3YamlPropertiesLocation;
+
+import static java.lang.Character.toLowerCase;
 
 public class S3YamlPropertiesLocationRegistrar
         implements EnvironmentAware, ImportBeanDefinitionRegistrar {
@@ -23,8 +23,7 @@ public class S3YamlPropertiesLocationRegistrar
 
     public S3YamlPropertiesLocationRegistrar() {}
 
-    public S3YamlPropertiesLocationRegistrar(Environment environment,
-            SystemPropertyResolver resolver) {
+    public S3YamlPropertiesLocationRegistrar(Environment environment) {
         this.environment = environment;
     }
 
@@ -50,12 +49,12 @@ public class S3YamlPropertiesLocationRegistrar
 
         BeanDefinition configurerDefinition =
                 new RootBeanDefinition(S3YamlPropertiesSourceConfigurer.class);
-        configurerDefinition.getPropertyValues().addPropertyValue("s3ResourceLoader",
-                new RuntimeBeanReference("s3ResourceLoader"));
+        configurerDefinition.getPropertyValues().addPropertyValue("amazonS3",
+                new RuntimeBeanReference("getAmazonS3"));
         configurerDefinition.getPropertyValues().add("locations", formattedLocations);
 
         registry.registerBeanDefinition(
-                WordUtils.classNameloweredCaseFirstLetter(S3YamlPropertiesSourceConfigurer.class),
+                classNameLoweredCaseFirstLetter(S3YamlPropertiesSourceConfigurer.class),
                 configurerDefinition);
     }
 
@@ -64,4 +63,8 @@ public class S3YamlPropertiesLocationRegistrar
         this.environment = environment;
     }
 
+    private static String classNameLoweredCaseFirstLetter(Class<?> clazz) {
+        String clazzName = clazz.getSimpleName();
+        return toLowerCase(clazzName.charAt(0)) + clazzName.substring(1);
+    }
 }

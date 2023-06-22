@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.cargochief.spring.properties.exception.InvalidS3LocationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -22,20 +26,18 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.StringUtils;
 
-import com.spring.loader.cloud.S3StreamLoader;
-
 public class S3YamlPropertiesSourceConfigurer
         implements EnvironmentAware, BeanFactoryPostProcessor, PriorityOrdered {
-
+    private static final String S3_PROTOCOL_PREFIX = "s3://";
     private static final Logger LOGGER =
             LoggerFactory.getLogger(S3YamlPropertiesSourceConfigurer.class);
 
     private Environment environment;
-    private S3StreamLoader s3ResourceLoader;
     private String[] locations;
+    private AmazonS3 amazonS3;
 
-    public void setS3ResourceLoader(S3StreamLoader s3ResourceLoader) {
-        this.s3ResourceLoader = s3ResourceLoader;
+    public void setAmazonS3(AmazonS3 amazonS3) {
+        this.amazonS3 = amazonS3;
     }
 
     public void setLocations(String[] locations) {
@@ -88,8 +90,12 @@ public class S3YamlPropertiesSourceConfigurer
             String location) {
         try {
             if (!StringUtils.isEmpty(location)) {
-                InputStream in = s3ResourceLoader.getProperty(location);
-                InputStreamResource resource = new InputStreamResource(in);
+                System.out.println("LOCATION: " + location);
+                GetObjectRequest getObjectRequest = parseGetObjectRequestFromS3Location(location);
+                S3Object responseObject = amazonS3.getObject(getObjectRequest);
+                InputStream config = responseObject.getObjectContent();
+
+                InputStreamResource resource = new InputStreamResource(config);
                 List<PropertySource<?>> propertySource = sourceLoader.load(location, resource);
                 if (propertySource != null) {
                     for (PropertySource propSource : propertySource) {
@@ -111,6 +117,19 @@ public class S3YamlPropertiesSourceConfigurer
         } catch (Exception e) {
             LOGGER.error("Could not load properties from location " + location, e);
         }
+    }
+
+    private GetObjectRequest parseGetObjectRequestFromS3Location(String location) {
+        String path = location.startsWith(S3_PROTOCOL_PREFIX) ? location.substring(S3_PROTOCOL_PREFIX.length(), location.length()) : location;
+
+        if(!path.contains("/")) {
+            throw new InvalidS3LocationException("The location must contains the full path of the properties file");
+        }
+
+        String bucketName = path.substring(0, path.indexOf('/'));
+        String keyName = path.substring(path.indexOf('/') + 1);
+
+        return new GetObjectRequest(bucketName, keyName);
     }
 
 }

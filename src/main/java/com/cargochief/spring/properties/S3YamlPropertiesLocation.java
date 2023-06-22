@@ -7,12 +7,11 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
-import com.cargochief.spring.properties.configuration.S3YamlPropertiesLoaderConfiguration;
 import com.cargochief.spring.properties.configuration.S3YamlPropertiesLocationRegistrar;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({S3YamlPropertiesLoaderConfiguration.class, S3YamlPropertiesLocationRegistrar.class})
+@Import(S3YamlPropertiesLocationRegistrar.class)
 public @interface S3YamlPropertiesLocation {
 
     /**

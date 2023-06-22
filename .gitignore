@@ -10,8 +10,6 @@ build
 /.settings
 /.gradle
 /gradle/
-gradlew
-gradlew.bat
 application.yml
 /bin
 *.log

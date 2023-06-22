@@ -7,11 +7,51 @@
 buildscript {
     repositories {
         mavenCentral()
+        mavenLocal()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:2.6.1")
     }
 }
+
+plugins {
+    id 'java'
+}
+
+allprojects {
+    apply plugin: "maven"
+    apply plugin: "maven-publish"
+
+    repositories {
+        maven {
+            name "CargoChief Maven Snapshots Repo"
+            url "s3://cargochief-maven2/snapshots"
+            authentication {
+                awsIm(AwsImAuthentication) // load from EC2 role or env var
+            }
+        }
+        mavenLocal()
+        mavenCentral()
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+        repositories {
+            maven {
+                url "s3://cargochief-maven2/snapshots"
+                authentication {
+                    awsIm(AwsImAuthentication)// load from EC2 role or env var
+                }
+            }
+        }
+    }
+}
+
+version = '4.0.0'
 
 apply plugin: 'maven'
 apply plugin: 'java'
@@ -30,12 +70,12 @@ eclipse {
 
 repositories {
     mavenCentral()
-    jcenter()
+    mavenLocal()
 }
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter:2.6.1")
-    compile "com.spring.loader:s3-loader:2.2.2"
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.11.896'
 }
 
 bootJar {
