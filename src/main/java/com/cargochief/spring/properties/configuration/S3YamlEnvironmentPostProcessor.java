@@ -38,19 +38,25 @@ public class S3YamlEnvironmentPostProcessor implements EnvironmentPostProcessor,
 		YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
 		AmazonS3 s3Client = null;
 
-		Map<String, Object> systemEnv = environment.getSystemEnvironment();
-		for (Map.Entry<String, Object> entry : systemEnv.entrySet()) {
-			String value = String.valueOf(entry.getValue());
-			if (isS3YamlLocation(value)) {
-				try {
-					if (s3Client == null) {
-						s3Client = AmazonS3ClientBuilder.defaultClient();
+		try {
+			Map<String, Object> systemEnv = environment.getSystemEnvironment();
+			for (Map.Entry<String, Object> entry : systemEnv.entrySet()) {
+				String value = String.valueOf(entry.getValue());
+				if (isS3YamlLocation(value)) {
+					try {
+						if (s3Client == null) {
+							s3Client = AmazonS3ClientBuilder.defaultClient();
+						}
+						loadProperties(environment, loader, s3Client, value, entry.getKey());
+					} catch (Exception e) {
+						System.err.println("S3YamlEnvironmentPostProcessor: Failed to load from "
+								+ entry.getKey() + ": " + e.getMessage());
 					}
-					loadProperties(environment, loader, s3Client, value, entry.getKey());
-				} catch (Exception e) {
-					System.err.println("S3YamlEnvironmentPostProcessor: Failed to load from "
-							+ entry.getKey() + ": " + e.getMessage());
 				}
+			}
+		} finally {
+			if (s3Client != null) {
+				s3Client.shutdown();
 			}
 		}
 	}
@@ -68,13 +74,16 @@ public class S3YamlEnvironmentPostProcessor implements EnvironmentPostProcessor,
 		String path = location.substring(S3_PROTOCOL_PREFIX.length());
 		int slashIndex = path.indexOf('/');
 		if (slashIndex < 0) {
+			System.err.println("S3YamlEnvironmentPostProcessor: Invalid S3 location (no key path): " + location);
 			return;
 		}
 		String bucket = path.substring(0, slashIndex);
 		String key = path.substring(slashIndex + 1);
 
-		S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucket, key));
-		byte[] content = s3Object.getObjectContent().readAllBytes();
+		byte[] content;
+		try (S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucket, key))) {
+			content = s3Object.getObjectContent().readAllBytes();
+		}
 
 		List<PropertySource<?>> propertySources = loader.load(location, new ByteArrayResource(content));
 		for (PropertySource<?> propertySource : propertySources) {
