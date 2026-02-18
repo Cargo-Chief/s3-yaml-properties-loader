@@ -15,7 +15,6 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'maven'
     id 'maven-publish'
 }
 
@@ -35,9 +34,8 @@ publishing {
     }
 }
 
-version = '4.0.0'
+version = '4.1.0'
 
-apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'java-library'
 apply plugin: 'eclipse'
@@ -57,7 +55,7 @@ repositories {
 }
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter:2.6.1")
+    implementation("org.springframework.boot:spring-boot-starter:2.6.1")
     implementation 'com.amazonaws:aws-java-sdk-s3:1.11.896'
 }
 
@@ -70,7 +68,7 @@ jar {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
 }
 
