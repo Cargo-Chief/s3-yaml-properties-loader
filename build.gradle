@@ -55,7 +55,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter:2.6.1")
+    api("org.springframework.boot:spring-boot-starter:2.6.1")
     implementation 'com.amazonaws:aws-java-sdk-s3:1.11.896'
 }
 

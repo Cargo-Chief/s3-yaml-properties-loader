@@ -11,9 +11,11 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.util.StreamUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Loads YAML properties from S3 before the application context starts,
@@ -44,7 +46,7 @@ public class S3YamlEnvironmentPostProcessor implements EnvironmentPostProcessor,
 				String value = String.valueOf(entry.getValue());
 				if (isS3YamlLocation(value)) {
 					try {
-						if (s3Client == null) {
+						if (Objects.isNull(s3Client)) {
 							s3Client = AmazonS3ClientBuilder.defaultClient();
 						}
 						loadProperties(environment, loader, s3Client, value, entry.getKey());
@@ -55,14 +57,14 @@ public class S3YamlEnvironmentPostProcessor implements EnvironmentPostProcessor,
 				}
 			}
 		} finally {
-			if (s3Client != null) {
+			if (Objects.nonNull(s3Client)) {
 				s3Client.shutdown();
 			}
 		}
 	}
 
 	private boolean isS3YamlLocation(String value) {
-		if (value == null || !value.startsWith(S3_PROTOCOL_PREFIX)) {
+		if (Objects.isNull(value) || !value.startsWith(S3_PROTOCOL_PREFIX)) {
 			return false;
 		}
 		String lower = value.toLowerCase();
@@ -79,10 +81,14 @@ public class S3YamlEnvironmentPostProcessor implements EnvironmentPostProcessor,
 		}
 		String bucket = path.substring(0, slashIndex);
 		String key = path.substring(slashIndex + 1);
+		if (key.isEmpty()) {
+			System.err.println("S3YamlEnvironmentPostProcessor: Invalid S3 location (empty key): " + location);
+			return;
+		}
 
 		byte[] content;
 		try (S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucket, key))) {
-			content = s3Object.getObjectContent().readAllBytes();
+			content = StreamUtils.copyToByteArray(s3Object.getObjectContent());
 		}
 
 		List<PropertySource<?>> propertySources = loader.load(location, new ByteArrayResource(content));
