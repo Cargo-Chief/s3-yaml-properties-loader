@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  com.cargochief.spring.properties.configuration.S3YamlEnvironmentPostProcessor
